@@ -2,8 +2,18 @@ window.onload = () => {
   let data = [];
   let selectedId = null;
 
-  const generateUUID = () => {
-    return Math.floor(Math.random() * 100000001).toString;
+  const generlateUUID = () => {
+    return Math.floor(Math.random() * 100000001).toString();
+  };
+
+  const removeCard = (e) => {
+    const {
+      dataset: { id },
+    } = e.target;
+
+    data = data.filter((item) => item.id !== id);
+    localStorage.setItem("data", JSON.stringify(data));
+    reload();
   };
 
   const openModifyCardModal = (e) => {
@@ -12,37 +22,24 @@ window.onload = () => {
     } = e.target;
     const {
       title = "",
-      content = "",
-      status = "TODO",
       startAt = "",
       endAt = "",
+      status = "TODO",
+      content = "",
     } = data.find((item) => item.id === id);
 
     document.getElementById("title").value = title;
-    document.getElementById("content").value = content;
-    document.getElementById("status").value = status;
     document.getElementById("startAt").value = startAt;
     document.getElementById("endAt").value = endAt;
+    document.getElementById("status").value = status;
+    document.getElementById("content").value = content;
 
     selectedId = id;
 
-    document.getElementById("modifyMOdal").classList.add("on");
-  };
-
-  const removeCard = (e) => {
-    const {
-      dataset: { id },
-    } = e.target;
-    data = data.filter((item) => item.id === id);
-    localStorage.setItem("data", JSON.stringify(data));
-    console.log(document.querySelector(`div.card[data-id="${id}"]`).remove());
-  };
-
-  const modifyCard = (e) => {
     document.getElementById("modifyModal").classList.add("on");
   };
 
-  const closeModifyModal = (e) => {
+  const closeModifyCardModal = (e) => {
     document.getElementById("modifyModal").classList.remove("on");
   };
 
@@ -55,32 +52,34 @@ window.onload = () => {
           [name]: value,
         };
       }
+
       return item;
     });
     localStorage.setItem("data", JSON.stringify(data));
+
+    reload();
   };
 
-  const drawCard = ({ id, title }) => {
+  const drawCard = ({ id, title = "" }) => {
     const card = document.createElement("div");
     card.classList.add("card");
-    card.dataset.id = id;
 
     const input = document.createElement("input");
     input.setAttribute("type", "text");
     input.setAttribute("name", "cardTitle");
     input.setAttribute("id", "cardTitle");
-    input.dataset.id = id;
     input.setAttribute("placeholder", "내용을 입력해주세요");
     input.setAttribute("value", title);
     input.addEventListener("change", (e) => {
       const { value } = e.target;
       data = data.map((item) => {
-        if (item.id === selectedId) {
+        if (item.id === id) {
           return {
             ...item,
             title: value,
           };
         }
+
         return item;
       });
       localStorage.setItem("data", JSON.stringify(data));
@@ -93,7 +92,8 @@ window.onload = () => {
     const modifyBtn = document.createElement("button");
     modifyBtn.innerText = "수정";
     modifyBtn.dataset.id = id;
-    modifyBtn.addEventListener("click", modifyCard);
+    console.log(id);
+    modifyBtn.addEventListener("click", openModifyCardModal);
     btnList.prepend(modifyBtn);
 
     const deleteBtn = document.createElement("button");
@@ -105,14 +105,6 @@ window.onload = () => {
     card.appendChild(btnList);
 
     return card;
-
-    /**
-     * title : 제목
-     * content : 내용
-     * status : 상태
-     * startAt : 시작일
-     * endAt : 종료일
-     */
   };
 
   const reset = () => {
@@ -135,8 +127,8 @@ window.onload = () => {
   const reload = () => {
     console.log("Reload...");
     reset();
-    const todo = document.getElementById("todo");
 
+    const todo = document.getElementById("todo");
     (data || [])
       .filter((item) => item.status === "TODO")
       .map((todoItem) => todo.prepend(drawCard(todoItem)));
@@ -154,14 +146,12 @@ window.onload = () => {
 
   const addTodoCard = (e) => {
     const initData = {
-      id: generateUUID(),
+      id: generlateUUID(),
       title: "",
-      content: "",
       status: "TODO",
       startAt: "",
       endAt: "",
     };
-
     data.push(initData);
     localStorage.setItem("data", JSON.stringify(data));
 
@@ -170,9 +160,8 @@ window.onload = () => {
 
   const addInProgressCard = (e) => {
     const initData = {
-      id: generateUUID(),
+      id: generlateUUID(),
       title: "",
-      content: "",
       status: "IN_PROGRESS",
       startAt: "",
       endAt: "",
@@ -185,39 +174,40 @@ window.onload = () => {
 
   const addDoneCard = (e) => {
     const initData = {
-      id: generateUUID(),
+      id: generlateUUID(),
       title: "",
-      content: "",
       status: "DONE",
       startAt: "",
       endAt: "",
     };
     data.push(initData);
     localStorage.setItem("data", JSON.stringify(data));
+
     reload();
   };
 
-  //INIT
   const init = () => {
     try {
-      data = JSON.parse(localStorage.getItem("data") || []);
+      data = JSON.parse(localStorage.getItem("data")) || [];
     } catch (e) {
       data = [];
     }
     reload();
   };
 
+  init();
+
   document.getElementById("addTodoBtn").addEventListener("click", addTodoCard);
   document
-    .getElementById("addInProgressBtn")
+    .getElementById("addInPorgressBtn")
     .addEventListener("click", addInProgressCard);
   document.getElementById("addDoneBtn").addEventListener("click", addDoneCard);
   document
     .getElementById("modifyModalCloseBtn")
-    .addEventListener("click", closeModifyModal);
+    .addEventListener("click", closeModifyCardModal);
   document.getElementById("title").addEventListener("change", handleData);
-  document.getElementById("content").addEventListener("change", handleData);
-  document.getElementById("status").addEventListener("change", handleData);
   document.getElementById("startAt").addEventListener("change", handleData);
   document.getElementById("endAt").addEventListener("change", handleData);
+  document.getElementById("status").addEventListener("change", handleData);
+  document.getElementById("content").addEventListener("change", handleData);
 };
